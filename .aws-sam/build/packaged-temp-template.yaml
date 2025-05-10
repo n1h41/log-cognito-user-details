@@ -1,0 +1,13 @@
+Resources:
+  Function:
+    Type: AWS::Serverless::Function
+    Properties:
+      Timeout: 300
+      MemorySize: 128
+      Handler: handler
+      CodeUri: s3://n1h41/5ce38d30cb7f14dde0fff3e9cd32f478
+      Runtime: go1.x
+      Architectures:
+      - x86_64
+    Metadata:
+      SamResourceId: Function
