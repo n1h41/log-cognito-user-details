@@ -3,10 +3,8 @@ package main
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"log"
 	"os"
-	"time"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -66,7 +64,7 @@ func addUserToPostgres(ctx context.Context, userAttributes map[string]string) er
 	email := userAttributes["email"]
 	phone := userAttributes["phone_number"]
 
-	query := `INSERT INTO z_users (cognito_id, email, phone, role) VALUES ($1, $2, $3, $4) ON CONFLICT (cognito_id) DO NOTHING RETURNING user_id`
+	query := `INSERT INTO z_users (cognito_id, email, phone, role) VALUES ($1, $2, $3, $4) ON CONFLICT (email) DO NOTHING RETURNING user_id`
 
 	role := "user"
 	if userRole, exists := userAttributes["custom:role"]; exists && userRole == "admin" {
@@ -118,28 +116,7 @@ func handler(ctx context.Context, event events.CognitoEventUserPoolsPostConfirma
 		log.Fatalf("Unable to add item to dynamodDb User table, %v", err)
 	}
 
-	id := generateTimeID()
-
-	entityItem := dynamodb.PutItemInput{
-		TableName: aws.String("entityTable"),
-		Item: map[string]types.AttributeValue{
-			"id":     &types.AttributeValueMemberS{Value: id},
-			"name":   &types.AttributeValueMemberS{Value: userAttributes["name"]},
-			"idType": &types.AttributeValueMemberS{Value: userID},
-			"type":   &types.AttributeValueMemberS{Value: "user"},
-		},
-	}
-
-	_, err = dynamodbClient.PutItem(ctx, &entityItem)
-	if err != nil {
-		log.Fatalf("Unable to add item to dynamodDb Entity table, %v", err)
-	}
-
 	return event, nil
-}
-
-func generateTimeID() string {
-	return fmt.Sprintf("%d", time.Now().UnixNano())
 }
 
 func main() {
